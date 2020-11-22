@@ -4,6 +4,8 @@ async function main() {
   const gpioAccess = await navigator.requestGPIOAccess();
   const ledPort = gpioAccess.ports.get(26); // LED の GPIO ポート番号
   await ledPort.export("out");
+  const switchPort = gpioAccess.ports.get(5); // タクトスイッチの GPIO ポート番号
+  await switchPort.export("in");
 
   async function light(lit) {
     await ledPort.write(lit ? 1 : 0);
@@ -11,13 +13,33 @@ async function main() {
     ledView.style.backgroundColor = color;
   }
 
-  button.onmousedown = async function() {
+  button.onmousedown = async function () {
     await light(true);
   };
 
-  button.onmouseup = async function() {
+  button.onmouseup = async function () {
     await light(false);
   };
+
+  //  while (true) {
+  // Pull-up なので押したとき 0、それ以外では 1 が得られる
+  //    const state = await switchPort.read();
+  //    const lit = state === 0;
+  //    await light(lit);
+  //    await sleep(100);
+  //  }
+  //}
+
+  switchPort.onchange = async function (state) {
+    const lit = state === 0;
+    await light(lit);
+  };
+}
+
+function sleep(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
 }
 
 main();
